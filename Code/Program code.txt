@@ -1,0 +1,164 @@
+clc;
+% READ A WAV FILE
+[y,fs]=wavread('C:\Users\xyz\Desktop\audio48\audio 12.wav');
+disp('sampling frequency=');
+disp(fs);
+
+% FIND OVERALL INTENSITY USING BELOW EXPRESSION
+overallintensity=abs(sqrt(sum(y.*y)/length(y)));
+
+
+
+
+% FIND OVERALL LOUDNESS USING BELOW EXPRESSION
+overallloudness=(overallintensity/0.00001).^0.3;
+
+% CALCULATE FRAMELENGTH IN TERMS OF NUMBER OF SAMPLES THAT CORRESPONDS TO
+% 25ms FRAMELENGTH
+
+framelen=0.025*fs;
+% CALCULATE OVERLAP FACTOR WHEN OVERLAP OF 10ms BETWEEN SUCCESSIVE SAMPLES
+% IS USED
+overlapfactor=(2/5);
+invoverlapfactor=1-(overlapfactor);
+
+% USE ENFRAME COMMAND FOR FRAMING WITH ABOVE PARAMETERS
+[fout,fn]=enframe(y,rectwin(framelen),invoverlapfactor*framelen);
+% COMPUTE NUMBER OF FRAMES
+No_of_frames=(length(y)/framelen);
+
+% FIND INTENSITY AND LOUDNESS FOR EACH FRAME
+intensity=sqrt(sum(fout.*fout)/(length(fout)));
+loudness=(intensity/0.000001).^0.3;
+% FIND MINIMUM AND MAXIMUM INTENSITY 
+intensity_max=max(intensity);
+intensity_min=min(intensity);
+% FIND MINIMUM AND MAXIMUM LOUDNESS 
+loudness_max=max(loudness);
+loudness_min=min(loudness);
+% COMPUTE MFCC
+mc=melcepst(fout,fs,hamming(framelen),12,floor(3*log(fs)),framelen,round(framelen/2),0,0.5);
+mco(1)=mc(1);
+mco(2)=mc(2);
+mco(3)=mc(3);
+mco(4)=mc(4);
+mco(5)=mc(5);
+mco(6)=mc(6);
+mco(7)=mc(7);
+mco(8)=mc(8);
+mco(9)=mc(9);
+mco(10)=mc(10);
+mco(11)=mc(11);
+mco(12)=mc(12);
+mco(13)=mc(13);
+
+
+
+
+sum=0;
+for i=1:13
+    sum=sum+mco(i);
+end
+avg=sum/13;
+disp('average of mfcc is');
+disp(avg);
+for i=1:framelen-1
+            relamp=log(y(i+1)/y(i));
+        end
+        relamp1=20*relamp;
+        relamp2=abs(relamp1);
+        disp('relamp2=');
+        disp(relamp);
+% PLOT SPEECH SIGNAL
+figure(1);
+plot(y);
+xlabel('Discrete time');
+ylabel('Amplitude');
+% PLOT INTENSITY CORRESPONDING TO EACH FRAME
+figure(2);
+plot(intensity);
+xlabel('Frame number');
+ylabel('intensity');
+% PLOT LOUDNESS CORRESPONDING TO EACH FRAME
+figure(3);
+plot(loudness);
+xlabel('Frame number');
+ylabel('loudness');
+% PLOT MFCC's
+figure(4);
+plot(mco);
+xlabel('Index of mfcc');
+ylabel('value of coefficients');
+
+% DISPLAY ABOVE COMPUTED PARAMETERS
+
+disp('Overall intensity of speech=');
+disp(overallintensity);
+disp('Overall loudness of speech=');
+disp(overallloudness);
+disp('Frame length in terms of number of samples=');
+disp(framelen);
+disp('Number of frames=');
+disp(No_of_frames);
+disp('Overlap factor=');
+disp(overlapfactor);
+% DISPLAY MAXIMUM INTENSITY,MINIMUM INTENSITY,MAXIMUM LOUDNESS AND MINIMUM
+% LOUDNESS
+disp('Maximum intensity=');
+disp(intensity_max);
+disp('Minimum intensity=');
+disp(intensity_min);
+disp('Maximum loudness=');
+disp(loudness_max);
+disp('Minimum loudness=');
+disp(loudness_min);
+% DISPLAY MEL FREQUENCY CEPSTRAL COEFFICIENTS
+disp('The 13 mel frequency cepstral coefficients are ');
+disp(mco);
+
+% initialise the counter (k) value to zero and find the number of conditions satisfied          
+k=0;
+
+% check for conditions for a person being very highly depressed
+if(overallintensity<0.05)
+    k=k+1;
+end
+if(overallloudness<13)
+        k=k+1;
+end
+        dif_int=intensity_max-intensity_min;
+        dif_loudness=loudness_max-loudness_min;
+        if(dif_int<6*10^-3)
+            k=k+1;
+        end
+        if(dif_loudness<0.5)
+            k=k+1;
+        end
+        if(abs(avg)<5.6)
+            k=k+1;
+        end
+        if(relamp2<0.1)
+            k=k+1;
+        end
+         if(overallintensity>0.05 & overallintensity<0.1050)
+    k=k+1;
+        end
+        disp('k=');
+        disp(k);
+        if(k==6 || k==5)
+            disp('The case is that of a depressed person');
+            disp('Case of critical depression');
+            break;
+        end
+        
+% check for conditions for a person having moderate depression
+        if(k==4)
+            disp('The case is that of a depressed person');
+            disp('Case of moderate depression');
+            break;
+        end
+       
+% else display that the person is not depressed
+        if(k==0 || k==1 || k==2 || k==3)
+            disp('The person is not depressed');
+            end
